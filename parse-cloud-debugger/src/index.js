@@ -71,7 +71,7 @@ Parse.Cloud.runJob = function (name, data, options) {
 }
 
 Parse.Cloud.beforeSave = Parse.Cloud.afterSave = Parse.Cloud.beforeDelete = Parse.Cloud.afterDelete = function () {
-    console.log("This function is not available on client !");
+    console.log("After Save is not available for local testing!");
 }
 
 Parse.Cloud.httpRequest = function (options) {
@@ -165,8 +165,33 @@ var reqHandler = function (req, res) {
 app.post('/functions/:functionName', reqHandler);
 app.post('/1/functions/:functionName', reqHandler);
 
+var jobHandler = function (req, res) {
+    var jobName = req.params.jobName;
+
+    try {
+        Parse.Cloud.runJob(jobName, req.body, {
+            success: function (data) {
+                res.header("Access-Control-Allow-Origin", "*");
+                res.header("Access-Control-Request-Headers", "X-Requested-With, accept, content-type");
+                res.header("Access-Control-Allow-Methods", "GET, POST");
+                res.send({result: data});
+            },
+            error: function (err) {
+                res.send(err);
+            }
+        });
+    }
+    catch (e) {
+        res.send(e);
+    }
+};
+
+app.post('/jobs/:jobName', jobHandler);
+app.post('/1/jobs/:jobName', jobHandler);
+
+
 http.createServer(app).listen(app.get('port'), function () {
-    console.log('Local Parse Cloud runnig at localhost:' + app.get('port') + " !!!");
+    console.log('Local Parse Cloud running at localhost:' + app.get('port') + " !!!");
 });
 
 module.exports = parseLib;
